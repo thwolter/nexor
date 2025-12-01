@@ -7,6 +7,7 @@ src/nexor.egg-info/SOURCES.txt
 src/nexor.egg-info/dependency_links.txt
 src/nexor.egg-info/requires.txt
 src/nexor.egg-info/top_level.txt
+src/nexor/api/__init__.py
 src/nexor/config/__init__.py
 src/nexor/config/settings.py
 src/nexor/infrastructure/__init__.py
