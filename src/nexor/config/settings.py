@@ -14,6 +14,7 @@ class ServiceSettings(ValidatedSettings):
     env: Literal['development', 'production', 'testing'] = 'production'
     debug: bool | None = None
     postgres_url: SecretStr | None = None
+    alembic_url: SecretStr | None = None
     app_schema: str = 'nexor'
     db_pool_size: int = 20
     db_max_overflow: int = 20
@@ -26,21 +27,25 @@ class ServiceSettings(ValidatedSettings):
             return None
         return normalize_postgres_url(url.get_secret_value())
 
-    def _postgres_url_with_driver(self, drivername: str) -> SecretStr:
-        if self.postgres_url is None:
-            raise RuntimeError('postgres_url is required')
-
-        raw_url = self.postgres_url.get_secret_value()
-        url = make_url(raw_url)
-        if url.get_backend_name() == 'postgresql':
-            url = url.set(drivername=drivername)
-
-        return SecretStr(url.render_as_string(hide_password=False))
+    @field_validator('alembic_url', mode='before')
+    @classmethod
+    def _normalize_alembic_url(cls, url: SecretStr | None) -> str | None:
+        if url is None:
+            return None
+        return normalize_postgres_url(url.get_secret_value())
 
     @property
     def async_postgres_url(self) -> SecretStr:
-        return self._postgres_url_with_driver('postgresql+asyncpg')
+        if self.postgres_url is None:
+            raise RuntimeError('postgres_url must be provided to build async_postgres_url')
+        url = make_url(self.postgres_url.get_secret_value())
+        url = url.set(drivername='postgresql+asyncpg')
+        return SecretStr(url.render_as_string(hide_password=False))
 
     @property
-    def sync_postgres_url(self) -> SecretStr:
-        return self._postgres_url_with_driver('postgresql+psycopg')
+    def migration_url(self) -> SecretStr:
+        if self.alembic_url is None:
+            raise RuntimeError('alembic_url must be provided to build migration_url')
+        url = make_url(self.alembic_url.get_secret_value())
+        url = url.set(drivername='postgresql+psycopg')
+        return SecretStr(url.render_as_string(hide_password=False))

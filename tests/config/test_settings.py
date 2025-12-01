@@ -9,9 +9,11 @@ def test_async_postgres_url_normalizes_and_adds_asyncpg_driver():
     assert settings.async_postgres_url.get_secret_value() == 'postgresql+asyncpg://reader:secret@localhost/test'
 
 
-def test_sync_postgres_url_always_uses_psycopg_driver():
-    settings = ServiceSettings(postgres_url=SecretStr('postgresql://reader:secret@localhost/test'))
-    assert settings.sync_postgres_url.get_secret_value() == 'postgresql+psycopg://reader:secret@localhost/test'
+def test_migration_url_always_uses_psycopg_driver():
+    settings = ServiceSettings(
+        alembic_url=SecretStr('postgresql://reader:secret@localhost/test'), postgres_url=SecretStr('...')
+    )
+    assert settings.migration_url.get_secret_value() == 'postgresql+psycopg://reader:secret@localhost/test'
 
 
 def test_postgres_url_helpers_require_postgres_url():
@@ -20,4 +22,4 @@ def test_postgres_url_helpers_require_postgres_url():
     with pytest.raises(RuntimeError):
         _ = settings.async_postgres_url
     with pytest.raises(RuntimeError):
-        _ = settings.sync_postgres_url
+        _ = settings.migration_url
