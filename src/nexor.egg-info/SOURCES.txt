@@ -1,0 +1,13 @@
+README.md
+pyproject.toml
+src/nexor/__init__.py
+src/nexor/utils.py
+src/nexor.egg-info/PKG-INFO
+src/nexor.egg-info/SOURCES.txt
+src/nexor.egg-info/dependency_links.txt
+src/nexor.egg-info/requires.txt
+src/nexor.egg-info/top_level.txt
+src/nexor/config/__init__.py
+src/nexor/config/settings.py
+src/nexor/infrastructure/__init__.py
+src/nexor/infrastructure/db.py
