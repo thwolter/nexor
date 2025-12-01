@@ -41,7 +41,7 @@ def _normalize_async_url(settings: ServiceSettings) -> str:
     return settings.async_postgres_url.get_secret_value()
 
 
-def get_engine(settings: ServiceSettings, *, connect_args: dict = None) -> AsyncEngine:
+def get_engine(settings: ServiceSettings, *, connect_args: dict | None = None) -> AsyncEngine:
     loop = _current_loop()
 
     url = _normalize_async_url(settings)
@@ -62,7 +62,7 @@ def get_engine(settings: ServiceSettings, *, connect_args: dict = None) -> Async
     return engine
 
 
-def _get_sessionmaker(settings: ServiceSettings, *, connect_args: dict = None) -> SessionFactory:
+def _get_sessionmaker(settings: ServiceSettings, *, connect_args: dict | None = None) -> SessionFactory:
     loop = _current_loop()
     url = _normalize_async_url(settings)
     key = _cache_key(loop, url)
@@ -79,8 +79,10 @@ def _get_sessionmaker(settings: ServiceSettings, *, connect_args: dict = None) -
 
 
 @asynccontextmanager
-async def session_factory(settings: ServiceSettings, *, connect_args: dict = None) -> AsyncIterator[AsyncSession]:
-    session = _get_sessionmaker(settings, connect_args)()
+async def session_factory(
+    settings: ServiceSettings, *, connect_args: dict | None = None
+) -> AsyncIterator[AsyncSession]:
+    session = _get_sessionmaker(settings, connect_args=connect_args)()
     try:
         yield session
     except Exception:
@@ -96,7 +98,7 @@ async def scoped_session(
     settings: ServiceSettings,
     access_context: AccessContext,
     verify: bool = True,
-    connect_args: dict = None,
+    connect_args: dict | None = None,
 ) -> AsyncIterator[AsyncSession]:
     async with access_scoped_session_ctx(
         session_factory=lambda: session_factory(settings, connect_args=connect_args),

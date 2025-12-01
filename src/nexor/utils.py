@@ -88,26 +88,20 @@ class FingerprintMixin(BaseModel):
             overlap = include_set & exclude_set
             if overlap:
                 joined = ', '.join(sorted(overlap))
-                raise ValueError(
-                    f'Fingerprint keys appear in both include and exclude: {joined}'
-                )
+                raise ValueError(f'Fingerprint keys appear in both include and exclude: {joined}')
 
         model_fields = set(type(self).model_fields)
         if include_set is not None:
             invalid_includes = include_set - model_fields
             if invalid_includes:
                 joined = ', '.join(sorted(invalid_includes))
-                raise ValueError(
-                    f'Fingerprint include references unknown fields: {joined}'
-                )
+                raise ValueError(f'Fingerprint include references unknown fields: {joined}')
 
         if exclude_set is not None:
             invalid_excludes = exclude_set - model_fields
             if invalid_excludes:
                 joined = ', '.join(sorted(invalid_excludes))
-                raise ValueError(
-                    f'Fingerprint exclude references unknown fields: {joined}'
-                )
+                raise ValueError(f'Fingerprint exclude references unknown fields: {joined}')
 
         payload = self.model_dump(include=include_set, exclude=exclude_set, mode='json')
         canonical = json.dumps(payload, sort_keys=True, separators=(',', ':'))

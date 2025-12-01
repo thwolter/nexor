@@ -1,6 +1,6 @@
 [project]
 name = "nexor"
-version = "0.1.0"
+version = "0.3.0"
 description = "Shared database and configuration helpers for the FDE services"
 authors = [
     { name = "FDE Team", email = "support@riskary.de" },
@@ -27,6 +27,14 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+tag_format = "$version"
+version_scheme = "pep440"
+version_provider = "uv"
+update_changelog_on_bump = true
+major_version_zero = true
 [dependency-groups]
 dev = [
     "commitizen>=4.10.0",
@@ -39,3 +47,17 @@ dev = [
     "ssort>=0.15.0",
     "typer>=0.20.0",
 ]
+
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+
+
+[tool.pytest.ini_options]
+# Limit discovery & keep noise low
+testpaths = ["tests"]
+addopts = "-q -ra --tb=short --show-capture=no -p no:warnings"
+asyncio_mode = "auto"

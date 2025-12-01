@@ -21,8 +21,10 @@ class ServiceSettings(ValidatedSettings):
 
     @field_validator('postgres_url', mode='before')
     @classmethod
-    def _normalize_postgres_url(cls, url: str | None) -> str | None:
-        return normalize_postgres_url(url)
+    def _normalize_postgres_url(cls, url: SecretStr | None) -> str | None:
+        if url is None:
+            return None
+        return normalize_postgres_url(url.get_secret_value())
 
     def _postgres_url_with_driver(self, drivername: str) -> SecretStr:
         if self.postgres_url is None:
