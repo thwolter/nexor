@@ -11,6 +11,22 @@ from pydantic_settings import BaseSettings
 
 
 def parse_cors_origins(value: str | list[str] | None) -> tuple[str, ...]:
+    """
+    Parses and normalizes CORS origins from a string, list, or None into a tuple of strings.
+
+    This function handles various input formats to ensure they are correctly parsed into a
+    standardized tuple of origin strings usable for configuration. The input can be a string,
+    list of strings, or None. Special cases, such as the wildcard (`*`) and JSON-encoded
+    string or list, are also handled appropriately.
+
+    Args:
+        value: A string, list of strings, or None representing CORS origins. It can include
+            inputs such as a JSON-formatted list or a wildcard (`*`).
+
+    Returns:
+        A tuple of strings representing standardized CORS origins. Each origin string is
+        stripped of surrounding whitespace and any trailing forward slash.
+    """
     if not value:
         return ()
     if value in ('*', '"*"'):
@@ -65,6 +81,19 @@ def _check_missing_keys(
 
 
 class ValidatedSettings(BaseSettings):
+    """
+    ValidatedSettings is a subclass of BaseSettings designed to ensure critical configuration
+    settings are present during initialization.
+
+    This class provides a mechanism to validate the presence of required configuration keys,
+    helping to prevent runtime errors due to missing settings. After the instance is created,
+    it automatically checks for missing keys based on the defined `required_keys` class variable.
+
+    Attributes:
+        required_keys (ClassVar[list[str]]): A class-level attribute that lists the keys
+            required to be present during validation.
+    """
+
     required_keys: ClassVar[list[str]] = []
 
     def model_post_init(self, context: Any, /) -> None:
@@ -72,6 +101,18 @@ class ValidatedSettings(BaseSettings):
 
 
 class ValidatedModel(BaseModel):
+    """
+    Represents a validated model with required keys.
+
+    This class is a subclass of BaseModel. It is designed to provide
+    functionality to ensure that certain required keys are present in its
+    data. It supports customizable behavior through its attributes.
+
+    Attributes:
+        required_keys (ClassVar[list[str]]): A class-level attribute
+            representing a list of keys that are required for the model.
+    """
+
     required_keys: ClassVar[list[str]] = []
 
     def model_post_init(self, context: Any, /) -> None:
@@ -79,6 +120,21 @@ class ValidatedModel(BaseModel):
 
 
 class FingerprintMixin(BaseModel):
+    """
+    A mixin class for generating unique fingerprints for model instances.
+
+    This class provides functionality to calculate a cryptographic fingerprint
+    based on the specified fields of the model. It verifies that included and
+    excluded fields are valid and do not have conflicts. The resulting fingerprint
+    ensures uniqueness based on the specified attributes.
+
+    Attributes:
+        fingerprint_keys (ClassVar[Sequence[str] | None]): Specifies the fields to be
+            included in the fingerprint calculation. If None, all fields are considered.
+        fingerprint_exclude (ClassVar[Sequence[str] | None]): Specifies the fields to
+            be excluded from the fingerprint calculation.
+    """
+
     fingerprint_keys: ClassVar[Sequence[str] | None] = None
     fingerprint_exclude: ClassVar[Sequence[str] | None] = None
 
@@ -111,7 +167,16 @@ class FingerprintMixin(BaseModel):
 
 
 def normalize_postgres_url(url: str) -> str:
-    """Return a normalized `postgresql://` URL (or the original value)."""
+    """
+    Normalizes a PostgreSQL connection URL to use the 'postgresql://' schema instead
+    of the deprecated 'postgres://' schema.
+
+    Args:
+        url (str): The PostgreSQL connection URL to be normalized.
+
+    Returns:
+        str: A normalized PostgreSQL connection URL starting with 'postgresql://'.
+    """
     if url.startswith('postgres://'):
         return url.replace('postgres://', 'postgresql://', 1)
     return url
@@ -155,8 +220,26 @@ def _load_project_metadata(attribute: str) -> str:
 
 
 def get_app_version() -> str:
+    """
+    Retrieves the current application version.
+
+    This function fetches the version information of the application
+    from the project's metadata.
+
+    Returns:
+        str: The current version of the application.
+    """
     return _load_project_metadata('version')
 
 
 def get_app_name() -> str:
+    """
+    Retrieves the application name from the project's metadata.
+
+    The function utilizes the project's metadata to fetch
+    the name of the application.
+
+    Returns:
+        str: The name of the application.
+    """
     return _load_project_metadata('name')

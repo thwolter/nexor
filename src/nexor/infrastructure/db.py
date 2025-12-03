@@ -42,6 +42,22 @@ def _normalize_async_url(settings: ServiceSettings) -> str:
 
 
 def get_engine(settings: ServiceSettings) -> AsyncEngine:
+    """
+    Creates or retrieves a cached asynchronous database engine.
+
+    This function generates a new asynchronous engine based on the given service
+    settings or retrieves a cached one if it already exists, using the specified
+    event loop and normalized database URL.
+
+    Args:
+        settings (ServiceSettings): The configuration settings for the database
+            service, containing parameters required for engine creation such as
+            pool size, timeouts, and debug mode.
+
+    Returns:
+        AsyncEngine: An asynchronous database engine instance, either newly created
+        or fetched from the cache.
+    """
     loop = _current_loop()
     url = _normalize_async_url(settings)
     key = _cache_key(loop, url)
@@ -77,6 +93,23 @@ def _get_sessionmaker(settings: ServiceSettings) -> SessionFactory:
 
 @asynccontextmanager
 async def session_factory(settings: ServiceSettings) -> AsyncIterator[AsyncSession]:
+    """Creates an asynchronous context manager for managing database sessions.
+
+    This function serves as a factory for generating asynchronous sessions for database
+    operations. It yields an active session, handles rollback in case of exceptions, and
+    ensures the session is closed after operations are completed.
+
+    Args:
+        settings: ServiceSettings instance containing the configuration for creating the
+            sessionmaker.
+
+    Yields:
+        AsyncSession: An active asynchronous session object for interacting with the database.
+
+    Raises:
+        Exception: Propagates any encountered exception after ensuring the session is
+            rolled back.
+    """
     session = _get_sessionmaker(settings)()
     try:
         yield session
@@ -94,6 +127,24 @@ async def scoped_session(
     access_context: AccessContext,
     verify: bool = True,
 ) -> AsyncIterator[AsyncSession]:
+    """
+    Creates a scoped asynchronous database session context.
+
+    This function is an asynchronous context manager for managing a scoped
+    asynchronous session tied to a specific service configuration and access
+    context. It ensures that the session is properly committed at the end
+    of successful operations or handled correctly in case of exceptions.
+
+    Args:
+        settings (ServiceSettings): Configuration settings for the service.
+        access_context (AccessContext): Contextual information governing access.
+        verify (bool): Flag to indicate whether session verification should
+            be performed. Defaults to True.
+
+    Yields:
+        AsyncSession: An asynchronous session object to interact with the
+        database.
+    """
     async with access_scoped_session_ctx(
         session_factory=lambda: session_factory(settings),
         access_context=access_context,
@@ -131,6 +182,22 @@ async def pg_connection(
 
 
 async def dispose_engines(*, loop: Loop | None = None) -> None:
+    """
+    Dispose all database engines associated with a specific event loop.
+
+    This asynchronous function disposes of all database engine instances that
+    are tied to a particular event loop, freeing up resources. If no event loop
+    is provided, it attempts to retrieve the current default event loop. If
+    the retrieval of the event loop fails, the function exits gracefully.
+
+    Args:
+        loop (Loop | None): The specific event loop for which to dispose
+            associated engines. If None, the current event loop is retrieved
+            and used.
+
+    Returns:
+        None
+    """
     if loop is None:
         try:
             loop = _current_loop()
@@ -178,6 +245,21 @@ async def _test_db_connection_once(settings: ServiceSettings) -> None:
 
 
 async def test_db_connection(settings: ServiceSettings) -> None:
+    """
+    Tests the database connection using the provided settings.
+
+    This function attempts to establish a database connection and logs the result.
+    If the connection fails, it disposes of the database engines and raises a
+    RuntimeError. It's intended to ensure the database service settings are
+    correct and functional.
+
+    Args:
+        settings: The service settings required for establishing the database
+            connection.
+
+    Raises:
+        RuntimeError: If the database connection could not be established.
+    """
     try:
         await _test_db_connection_once(settings)
         logger.info('Database connection test successful')

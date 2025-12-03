@@ -120,7 +120,21 @@ def configure_loguru_logging(
     settings: object,
     exporter_settings: LogExporterSettings | None = None,
 ) -> None:
-    """Initialise Loguru logging with optional OTLP forwarding."""
+    """
+    Configures the Loguru logger with the specified settings and optional exporter settings.
+
+    This function adjusts the Loguru logging configuration based on parameters found in
+    the provided `settings` object. If exporter settings are provided and their use
+    is enabled, additional configuration is applied to support OTLP logging. The function
+    ensures that the Loguru logger is only configured once during the runtime.
+
+    Args:
+        settings (object): An object containing various log configuration options such as
+            log level, whether to use default sinks, and serialization preferences.
+        exporter_settings (LogExporterSettings | None): Optional settings to enable
+            and configure OTLP logging. If not provided or disabled, no additional
+            OTLP configuration is applied.
+    """
     global _configured_loguru
     if _configured_loguru:
         return
@@ -195,7 +209,27 @@ def configure_std_logging(
     formatter: str = '%(asctime)s %(levelname)s [%(name)s] %(message)s',
     exporter_settings: LogExporterSettings | None = None,
 ) -> None:
-    """Initialise the standard library logger with optional OTLP forwarding."""
+    """
+    Configures standard library logging with possible customization for log format,
+    log level, and additional exporter settings.
+
+    Standard logging configuration is applied globally only once. Further attempts to
+    execute this function will not reconfigure the logging.
+
+    Args:
+        settings (object): An object containing the logging configuration. The
+            'log_level' attribute determines the log level. If not provided,
+            defaults to 'INFO'.
+        formatter (str): Format string for log messages. Defaults to
+            '%(asctime)s %(levelname)s [%(name)s] %(message)s'.
+        exporter_settings (LogExporterSettings | None): Optional settings for an
+            external log exporter. If `exporter_settings.enabled` is set to True,
+            additional configuration for exporting logs is applied.
+
+    Raises:
+        AttributeError: If 'settings' is missing required 'log_level' attribute
+            or if specified log level is invalid.
+    """
     global _configured_stdlib
     if _configured_stdlib:
         return
