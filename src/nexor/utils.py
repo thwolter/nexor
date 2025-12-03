@@ -1,6 +1,8 @@
 import hashlib
 import json
 import os
+import pathlib
+import tomllib
 import warnings
 from typing import Any, ClassVar, Sequence
 
@@ -113,3 +115,23 @@ def normalize_postgres_url(url: str) -> str:
     if url.startswith('postgres://'):
         return url.replace('postgres://', 'postgresql://', 1)
     return url
+
+
+def app_version() -> str:
+    try:
+        path = pathlib.Path(__file__).resolve().parents[2] / 'pyproject.toml'
+        with open(path, 'rb') as f:
+            data = tomllib.load(f)
+        return data['project']['version']
+    except FileNotFoundError:
+        return 'unknown'
+
+
+def app_name() -> str:
+    try:
+        path = pathlib.Path(__file__).resolve().parents[2] / 'pyproject.toml'
+        with open(path, 'rb') as f:
+            data = tomllib.load(f)
+        return data['project']['name']
+    except FileNotFoundError:
+        return 'unknown'

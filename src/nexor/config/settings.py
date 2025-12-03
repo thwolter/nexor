@@ -1,9 +1,13 @@
 from typing import Literal
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from sqlalchemy.engine import make_url
 
-from nexor.utils import ValidatedSettings, normalize_postgres_url
+from nexor.utils import ValidatedSettings, app_version, normalize_postgres_url
+
+
+def load_version() -> str:
+    return app_version()
 
 
 class ServiceSettings(ValidatedSettings):
@@ -12,6 +16,7 @@ class ServiceSettings(ValidatedSettings):
     required_keys = ['postgres_url']
 
     env: Literal['development', 'production', 'testing'] = 'production'
+    version: str = Field(default_factory=load_version)
     debug: bool | None = None
     postgres_url: SecretStr | None = None
     alembic_url: SecretStr | None = None
