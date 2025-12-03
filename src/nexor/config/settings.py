@@ -16,7 +16,7 @@ class ServiceSettings(ValidatedSettings):
     debug: bool | None = None
     postgres_url: SecretStr | None = None
     alembic_url: SecretStr | None = None
-    app_schema: str = 'public'
+    app_schema: str = Field(default_factory=get_app_version)
     db_pool_size: int = 20
     db_max_overflow: int = 20
     db_pool_timeout: int = 30
@@ -56,3 +56,8 @@ class ServiceSettings(ValidatedSettings):
         url = make_url(self.alembic_url.get_secret_value())
         url = url.set(drivername='postgresql+psycopg')
         return SecretStr(url.render_as_string(hide_password=False))
+
+    @field_validator('app_schema')
+    @classmethod
+    def _lowercase_schema(cls, value: str) -> str:
+        return value.lower()
