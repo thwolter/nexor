@@ -3,11 +3,7 @@ from typing import Literal
 from pydantic import Field, SecretStr, field_validator
 from sqlalchemy.engine import make_url
 
-from nexor.utils import ValidatedSettings, app_version, normalize_postgres_url
-
-
-def load_version() -> str:
-    return app_version()
+from nexor.utils import ValidatedSettings, get_app_version, normalize_postgres_url
 
 
 class ServiceSettings(ValidatedSettings):
@@ -16,7 +12,7 @@ class ServiceSettings(ValidatedSettings):
     required_keys = ['postgres_url']
 
     env: Literal['development', 'production', 'testing'] = 'production'
-    version: str = Field(default_factory=load_version)
+    version: str = Field(default_factory=get_app_version)
     debug: bool | None = None
     postgres_url: SecretStr | None = None
     alembic_url: SecretStr | None = None
@@ -27,19 +23,22 @@ class ServiceSettings(ValidatedSettings):
 
     @field_validator('postgres_url', mode='before')
     @classmethod
-    def _normalize_postgres_url(cls, url: SecretStr | None) -> SecretStr | None:
+    def _normalize_postgres_url(cls, url: str | SecretStr | None) -> SecretStr | None:
         if url is None:
             return None
-        raw_url: str = url.get_secret_value()
-        normalized_url = normalize_postgres_url(raw_url)
+        if isinstance(url, SecretStr):
+            url = url.get_secret_value()
+        normalized_url = normalize_postgres_url(url)
         return SecretStr(normalized_url)
 
     @field_validator('alembic_url', mode='before')
     @classmethod
-    def _normalize_alembic_url(cls, url: SecretStr | None) -> SecretStr | None:
+    def _normalize_alembic_url(cls, url: str | SecretStr | None) -> SecretStr | None:
         if url is None:
             return None
-        normalized_url = normalize_postgres_url(url.get_secret_value())
+        if isinstance(url, SecretStr):
+            url = url.get_secret_value()
+        normalized_url = normalize_postgres_url(url)
         return SecretStr(normalized_url)
 
     @property

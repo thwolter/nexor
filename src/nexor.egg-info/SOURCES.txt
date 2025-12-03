@@ -15,3 +15,5 @@ src/nexor/config/__init__.py
 src/nexor/config/settings.py
 src/nexor/infrastructure/__init__.py
 src/nexor/infrastructure/db.py
+tests/test_logging.py
+tests/test_observability.py

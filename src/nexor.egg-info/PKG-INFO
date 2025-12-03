@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nexor
-Version: 0.2.0
+Version: 0.3.0
 Summary: Shared database and configuration helpers for the FDE services
 Author-email: FDE Team <support@riskary.de>
 License: MIT

@@ -117,21 +117,46 @@ def normalize_postgres_url(url: str) -> str:
     return url
 
 
-def app_version() -> str:
+PYPROJECT_FILE = 'pyproject.toml'
+APP_ROOT_ENV = 'NEXOR_APP_ROOT'
+
+
+def _find_pyproject_root() -> pathlib.Path | None:
+    """Return the closest pyproject root, allowing overrides and falling back to this package."""
+    env_path = os.getenv(APP_ROOT_ENV)
+    if env_path:
+        path = pathlib.Path(env_path).expanduser()
+        if (path / PYPROJECT_FILE).is_file():
+            return path
+
+    cwd = pathlib.Path.cwd()
+    for candidate in (cwd, *cwd.parents):
+        if (candidate / PYPROJECT_FILE).is_file():
+            return candidate
+
+    fallback = pathlib.Path(__file__).resolve().parents[2]
+    if (fallback / PYPROJECT_FILE).is_file():
+        return fallback
+
+    return None
+
+
+def _load_project_metadata(attribute: str) -> str:
+    root = _find_pyproject_root()
+    if not root:
+        return 'unknown'
+
     try:
-        path = pathlib.Path(__file__).resolve().parents[2] / 'pyproject.toml'
-        with open(path, 'rb') as f:
+        with open(root / PYPROJECT_FILE, 'rb') as f:
             data = tomllib.load(f)
-        return data['project']['version']
+        return data['project'][attribute]
     except FileNotFoundError:
         return 'unknown'
 
 
-def app_name() -> str:
-    try:
-        path = pathlib.Path(__file__).resolve().parents[2] / 'pyproject.toml'
-        with open(path, 'rb') as f:
-            data = tomllib.load(f)
-        return data['project']['name']
-    except FileNotFoundError:
-        return 'unknown'
+def get_app_version() -> str:
+    return _load_project_metadata('version')
+
+
+def get_app_name() -> str:
+    return _load_project_metadata('name')
