@@ -1,3 +1,11 @@
+## 0.4.0 (2025-12-03)
+
+### Feat
+
+- dynamic app_schema initialization and validation
+- refactor app metadata utilities and tests
+- add app version and name utilities with tests
+
 ## 0.3.0 (2025-12-03)
 
 ### Feat
