@@ -1,6 +1,6 @@
 [project]
 name = "nexor"
-version = "0.2.0"
+version = "0.3.0"
 description = "Shared database and configuration helpers for the FDE services"
 authors = [
     { name = "FDE Team", email = "support@riskary.de" },
