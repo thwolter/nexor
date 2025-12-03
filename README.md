@@ -5,6 +5,7 @@ Reusable configuration and database helpers for the FDE services.
 ## Goals
 - Centralize the async SQLAlchemy/SQLModel engine, session, and `asyncpg` helpers so every service can share the same connection lifecycle.
 - Provide a lightweight `ServiceSettings` base plus the `ValidatedSettings`/`ValidatedModel` helpers so each service uses consistent validation for environment variables.
+- Provide shared logging and observability helpers (`nexor.logging.configure_loguru_logging`, `nexor.logging.configure_std_logging`, `nexor.observability.*`) so every service uses consistent console sinks, OTLP exporters, and resource attributes.
 
 ## Installation
 Install the package via a path dependency (see harvestor `pyproject.toml` for an example):

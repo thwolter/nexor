@@ -41,9 +41,8 @@ def _normalize_async_url(settings: ServiceSettings) -> str:
     return settings.async_postgres_url.get_secret_value()
 
 
-def get_engine(settings: ServiceSettings, *, connect_args: dict | None = None) -> AsyncEngine:
+def get_engine(settings: ServiceSettings) -> AsyncEngine:
     loop = _current_loop()
-
     url = _normalize_async_url(settings)
     key = _cache_key(loop, url)
     engine = _engine_cache.get(key)
@@ -56,13 +55,12 @@ def get_engine(settings: ServiceSettings, *, connect_args: dict | None = None) -
             pool_size=settings.db_pool_size,
             max_overflow=settings.db_max_overflow,
             pool_timeout=settings.db_pool_timeout,
-            connect_args=connect_args,
         )
         _engine_cache[key] = engine
     return engine
 
 
-def _get_sessionmaker(settings: ServiceSettings, *, connect_args: dict | None = None) -> SessionFactory:
+def _get_sessionmaker(settings: ServiceSettings) -> SessionFactory:
     loop = _current_loop()
     url = _normalize_async_url(settings)
     key = _cache_key(loop, url)
@@ -72,17 +70,14 @@ def _get_sessionmaker(settings: ServiceSettings, *, connect_args: dict | None = 
             bind=get_engine(settings),
             class_=AsyncSession,
             expire_on_commit=False,
-            connect_args=connect_args,
         )
         _sessionmaker_cache[key] = sessionmaker
     return sessionmaker
 
 
 @asynccontextmanager
-async def session_factory(
-    settings: ServiceSettings, *, connect_args: dict | None = None
-) -> AsyncIterator[AsyncSession]:
-    session = _get_sessionmaker(settings, connect_args=connect_args)()
+async def session_factory(settings: ServiceSettings) -> AsyncIterator[AsyncSession]:
+    session = _get_sessionmaker(settings)()
     try:
         yield session
     except Exception:
@@ -98,10 +93,9 @@ async def scoped_session(
     settings: ServiceSettings,
     access_context: AccessContext,
     verify: bool = True,
-    connect_args: dict | None = None,
 ) -> AsyncIterator[AsyncSession]:
     async with access_scoped_session_ctx(
-        session_factory=lambda: session_factory(settings, connect_args=connect_args),
+        session_factory=lambda: session_factory(settings),
         access_context=access_context,
         verify=verify,
     ) as session:

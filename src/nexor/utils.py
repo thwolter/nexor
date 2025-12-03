@@ -108,10 +108,8 @@ class FingerprintMixin(BaseModel):
         return hashlib.sha256(canonical.encode()).hexdigest()
 
 
-def normalize_postgres_url(url: str | None) -> str | None:
+def normalize_postgres_url(url: str) -> str:
     """Return a normalized `postgresql://` URL (or the original value)."""
-    if url is None:
-        return None
     if url.startswith('postgres://'):
         return url.replace('postgres://', 'postgresql://', 1)
     return url

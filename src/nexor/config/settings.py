@@ -15,24 +15,27 @@ class ServiceSettings(ValidatedSettings):
     debug: bool | None = None
     postgres_url: SecretStr | None = None
     alembic_url: SecretStr | None = None
-    app_schema: str = 'nexor'
+    app_schema: str = 'public'
     db_pool_size: int = 20
     db_max_overflow: int = 20
     db_pool_timeout: int = 30
 
     @field_validator('postgres_url', mode='before')
     @classmethod
-    def _normalize_postgres_url(cls, url: SecretStr | None) -> str | None:
+    def _normalize_postgres_url(cls, url: SecretStr | None) -> SecretStr | None:
         if url is None:
             return None
-        return normalize_postgres_url(url.get_secret_value())
+        raw_url: str = url.get_secret_value()
+        normalized_url = normalize_postgres_url(raw_url)
+        return SecretStr(normalized_url)
 
     @field_validator('alembic_url', mode='before')
     @classmethod
-    def _normalize_alembic_url(cls, url: SecretStr | None) -> str | None:
+    def _normalize_alembic_url(cls, url: SecretStr | None) -> SecretStr | None:
         if url is None:
             return None
-        return normalize_postgres_url(url.get_secret_value())
+        normalized_url = normalize_postgres_url(url.get_secret_value())
+        return SecretStr(normalized_url)
 
     @property
     def async_postgres_url(self) -> SecretStr:
