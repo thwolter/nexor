@@ -36,20 +36,20 @@ def install_health_routes(
 
     router = APIRouter(prefix=prefix, tags=['health'])
 
-    @router.get('/healthz')
-    async def healthz():  # pragma: no cover - lightweight healthcheck
+    @router.get('/live')
+    async def live():  # pragma: no cover - lightweight healthcheck
         try:
             await test_db_connection(settings)
         except Exception as exc:
             raise HTTPException(status_code=503, detail=str(exc))
         return {'status': 'ok'}
 
-    @router.get('/readyz')
-    async def readyz():  # pragma: no cover - trivial endpoint
+    @router.get('/ready')
+    async def ready():  # pragma: no cover - trivial endpoint
         return {'status': 'ready'}
 
-    @router.get('/readyz/worker')
-    async def readyz_worker():  # pragma: no cover - lightweight healthcheck
+    @router.get('/ready/worker')
+    async def ready_worker():  # pragma: no cover - lightweight healthcheck
         try:
             await worker_ping()
         except Exception as exc:
