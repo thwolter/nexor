@@ -8,6 +8,7 @@ from uuid import UUID
 
 import asyncpg
 from pydantic import SecretStr
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 from tenauth.schemas import AccessContext
@@ -162,8 +163,11 @@ async def scoped_session(
 
 
 async def pg_connect(postgres_url: SecretStr, tenant_id: UUID | None) -> asyncpg.Connection:
-    dsn = postgres_url.get_secret_value()
-    dsn = dsn.replace('+asyncpg://', '://', 1)
+    url = make_url(postgres_url.get_secret_value())
+    if '+' in url.drivername:
+        drivername = url.drivername.split('+', 1)[0]
+        url = url.set(drivername=drivername)
+    dsn = url.render_as_string(hide_password=False)
     if tenant_id is None:
         return await asyncpg.connect(dsn=dsn)
     return await asyncpg.connect(dsn=dsn, server_settings={'app.tenant_id': str(tenant_id)})
