@@ -2,10 +2,10 @@ from typing import Awaitable, Callable, TypeVar
 
 from fastapi import APIRouter, FastAPI, HTTPException
 
-from nexor.config.settings import ServiceSettings
+from nexor.config.settings import DatabaseSettings
 from nexor.infrastructure.db import test_db_connection
 
-S = TypeVar('S', bound=ServiceSettings)
+S = TypeVar('S', bound=DatabaseSettings)
 
 
 async def _noop_worker_ping() -> None:

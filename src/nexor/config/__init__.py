@@ -1,3 +1,3 @@
-from .settings import ServiceSettings
+from .settings import DatabaseSettings, NexorDBSettings, ServiceSettings
 
-__all__ = ['ServiceSettings']
+__all__ = ['NexorDBSettings', 'ServiceSettings', 'DatabaseSettings']

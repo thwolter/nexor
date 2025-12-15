@@ -1,22 +1,18 @@
+import warnings
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
+from pydantic_settings import BaseSettings
 from sqlalchemy.engine import make_url
 
 from nexor.utils import ValidatedSettings, get_app_version, normalize_postgres_url
 
 
-class ServiceSettings(ValidatedSettings):
-    """Lightweight base settings for database-backed services."""
-
-    required_keys = ['postgres_url']
-
-    env: Literal['development', 'production', 'testing'] = 'production'
-    version: str = Field(default_factory=get_app_version)
-    debug: bool | None = None
-    postgres_url: SecretStr | None = None
-    alembic_url: SecretStr | None = None
-    app_schema: str = Field(default_factory=get_app_version)
+class DatabaseSettings(BaseSettings):
+    postgres_url: SecretStr
+    alembic_url: SecretStr
+    app_schema: str
+    debug: bool | None = False
     db_pool_size: int = 20
     db_max_overflow: int = 20
     db_pool_timeout: int = 30
@@ -61,3 +57,34 @@ class ServiceSettings(ValidatedSettings):
     @classmethod
     def _lowercase_schema(cls, value: str) -> str:
         return value.lower()
+
+    @field_validator('debug', mode='before')
+    @classmethod
+    def _coerce_debug(cls, value: bool | None) -> bool | None:
+        return value or False
+
+
+class NexorDBSettings(DatabaseSettings):
+    def __init__(self, **data):
+        warnings.warn(
+            'NexorDBSettings is deprecated and will be removed in a future version. Use DatabaseSettings instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**data)
+
+
+class ServiceSettings(ValidatedSettings):
+    """Lightweight base settings for database-backed services."""
+
+    env: Literal['development', 'production', 'testing'] = 'production'
+    version: str = Field(default_factory=get_app_version)
+    debug: bool | None = None
+
+    def __init__(self, **data):
+        warnings.warn(
+            'ServiceSettings is deprecated and will be removed in a future version. Use DatabaseSettings instead.',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**data)

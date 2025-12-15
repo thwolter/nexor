@@ -2,7 +2,7 @@ import pytest
 from pydantic import SecretStr
 from testcontainers.postgres import PostgresContainer
 
-from nexor.config.settings import ServiceSettings
+from nexor.config import NexorDBSettings
 
 POSTGRES_IMAGE = 'postgres:16-alpine'
 
@@ -25,6 +25,10 @@ def postgres_url(postgres_container) -> SecretStr:
 
 
 @pytest.fixture(scope='session')
-def db_settings(postgres_url) -> ServiceSettings:
+def db_settings(postgres_url) -> NexorDBSettings:
     """Return settings configured to talk to the test Postgres instance."""
-    return ServiceSettings(postgres_url=postgres_url)
+    return NexorDBSettings(
+        postgres_url=postgres_url,
+        alembic_url=postgres_url,
+        app_schema='integration',
+    )

@@ -14,8 +14,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 try:  # pragma: no cover - optional instrumentation dependency
-    from opentelemetry.instrumentation.fastapi import (
-        FastAPIInstrumentor,  # type: ignore
+    from opentelemetry.instrumentation.fastapi import (  # type: ignore[missing-import]
+        FastAPIInstrumentor,
     )
 except Exception:
     FastAPIInstrumentor = None  # type: ignore

@@ -11,10 +11,9 @@ from pydantic import SecretStr
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
-from tenauth.schemas import AccessContext
-from tenauth.session import access_scoped_session_ctx
+from tenauth import AccessContext, access_scoped_session_ctx
 
-from nexor.config.settings import ServiceSettings
+from nexor.config.settings import DatabaseSettings
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +37,11 @@ def _cache_key(loop: Loop, url: str) -> Tuple[Loop, str]:
     return loop, url
 
 
-def _normalize_async_url(settings: ServiceSettings) -> str:
+def _normalize_async_url(settings: DatabaseSettings) -> str:
     return settings.async_postgres_url.get_secret_value()
 
 
-def get_engine(settings: ServiceSettings) -> AsyncEngine:
+def get_engine(settings: DatabaseSettings) -> AsyncEngine:
     """
     Creates or retrieves a cached asynchronous database engine.
 
@@ -51,9 +50,8 @@ def get_engine(settings: ServiceSettings) -> AsyncEngine:
     event loop and normalized database URL.
 
     Args:
-        settings (ServiceSettings): The configuration settings for the database
-            service, containing parameters required for engine creation such as
-            pool size, timeouts, and debug mode.
+        settings (DatabaseSettings): The database configuration, including URLs and
+            pool settings.
 
     Returns:
         AsyncEngine: An asynchronous database engine instance, either newly created
@@ -66,7 +64,7 @@ def get_engine(settings: ServiceSettings) -> AsyncEngine:
     if engine is None:
         engine = create_async_engine(
             url,
-            echo=settings.debug or False,
+            echo=settings.debug,
             pool_pre_ping=True,
             pool_recycle=3600,
             pool_size=settings.db_pool_size,
@@ -77,7 +75,7 @@ def get_engine(settings: ServiceSettings) -> AsyncEngine:
     return engine
 
 
-def _get_sessionmaker(settings: ServiceSettings) -> SessionFactory:
+def _get_sessionmaker(settings: DatabaseSettings) -> SessionFactory:
     loop = _current_loop()
     url = _normalize_async_url(settings)
     key = _cache_key(loop, url)
@@ -93,7 +91,7 @@ def _get_sessionmaker(settings: ServiceSettings) -> SessionFactory:
 
 
 @asynccontextmanager
-async def session_factory(settings: ServiceSettings) -> AsyncIterator[AsyncSession]:
+async def session_factory(settings: DatabaseSettings) -> AsyncIterator[AsyncSession]:
     """Creates an asynchronous context manager for managing database sessions.
 
     This function serves as a factory for generating asynchronous sessions for database
@@ -101,7 +99,7 @@ async def session_factory(settings: ServiceSettings) -> AsyncIterator[AsyncSessi
     ensures the session is closed after operations are completed.
 
     Args:
-        settings: ServiceSettings instance containing the configuration for creating the
+        settings: DatabaseSettings instance containing the configuration for creating the
             sessionmaker.
 
     Yields:
@@ -124,7 +122,7 @@ async def session_factory(settings: ServiceSettings) -> AsyncIterator[AsyncSessi
 @asynccontextmanager
 async def scoped_session(
     *,
-    settings: ServiceSettings,
+    settings: DatabaseSettings,
     access_context: AccessContext,
     verify: bool = True,
 ) -> AsyncIterator[AsyncSession]:
@@ -137,7 +135,7 @@ async def scoped_session(
     of successful operations or handled correctly in case of exceptions.
 
     Args:
-        settings (ServiceSettings): Configuration settings for the service.
+        settings (DatabaseSettings): Configuration for the database layer.
         access_context (AccessContext): Contextual information governing access.
         verify (bool): Flag to indicate whether session verification should
             be performed. Defaults to True.
@@ -241,14 +239,14 @@ def _retry_connection_after_dispose(max_attempts: int):
 
 
 @_retry_connection_after_dispose(DB_CONNECTION_TEST_RETRIES)
-async def _test_db_connection_once(settings: ServiceSettings) -> None:
+async def _test_db_connection_once(settings: DatabaseSettings) -> None:
     engine = get_engine(settings)
     logger.info(engine.url.render_as_string(hide_password=False))
     async with engine.connect():
         pass
 
 
-async def test_db_connection(settings: ServiceSettings) -> None:
+async def test_db_connection(settings: DatabaseSettings) -> None:
     """
     Tests the database connection using the provided settings.
 
@@ -258,7 +256,7 @@ async def test_db_connection(settings: ServiceSettings) -> None:
     correct and functional.
 
     Args:
-        settings: The service settings required for establishing the database
+        settings: The database configuration required for establishing the database
             connection.
 
     Raises:

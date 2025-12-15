@@ -3,12 +3,12 @@
 ## Overview
 
 The `nexor.infrastructure.db` helpers standardise async SQLAlchemy/SQLModel engine creation and session management.
-They rely on the shared `ServiceSettings` to normalise `postgres_url` before switching to `postgresql+asyncpg`.
+They rely on the shared `NexorDBSettings` (exposed as `ServiceSettings.db`) to normalise `postgres_url` before switching to `postgresql+asyncpg`.
 Caching is keyed by the running event loop plus DSN so concurrent FastAPI workers reuse the same pooled engines.
 
 | Helper | Responsibility |
 | --- | --- |
-| `get_engine` | Return or create a cached `AsyncEngine` for `settings.async_postgres_url`. |
+| `get_engine` | Return or create a cached `AsyncEngine` for `settings.db.async_postgres_url`. |
 | `session_factory` | Async context manager yielding a session; handles rollback on exception. |
 | `scoped_session` | Wraps `tenauth.access_scoped_session_ctx` for tenant-aware session scopes. |
 | `pg_connect` / `pg_connection` | Lightweight asyncpg helpers for raw `asyncpg.Connection`. |
@@ -22,7 +22,7 @@ from nexor.config import ServiceSettings
 
 
 async def fetch_count(settings: ServiceSettings) -> int:
-    async with db.session_factory(settings=settings) as session:
+    async with db.session_factory(db_settings=settings.db) as session:
         result = await session.execute('SELECT count(*) FROM some_table')
         return result.scalar_one()
 ```

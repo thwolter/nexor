@@ -5,15 +5,13 @@ This quickstart demonstrates how to bring together the core Nexor helpers to shi
 ## 1. Define service settings
 
 ```python
-from pydantic import SecretStr
-
-from nexor.config import ServiceSettings
+from nexor.config import NexorDBSettings, ServiceSettings
 
 
 class Settings(ServiceSettings):
-    required_keys = ServiceSettings.required_keys + ['redis_url']
+    required_keys = ['redis_url']
     redis_url: str
-    postgres_url: SecretStr | None = None
+    db: NexorDBSettings = NexorDBSettings(app_schema='my-service')
 
 
 settings = Settings()
@@ -51,7 +49,7 @@ install_health_routes(app, settings=settings)
 
 @app.get('/')
 async def home():
-    async with db.session_factory(settings=settings) as session:
+    async with db.session_factory(db_settings=settings.db) as session:
         result = await session.execute('SELECT 1')
         return {'result': result.scalar_one()}
 ```
