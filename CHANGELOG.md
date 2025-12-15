@@ -1,3 +1,9 @@
+## 0.7.0 (2025-12-15)
+
+### Feat
+
+- **config**: refactor settings for improved database management
+
 ## 0.6.0 (2025-12-15)
 
 ### Feat
