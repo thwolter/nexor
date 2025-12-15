@@ -1,3 +1,9 @@
+## 0.6.0 (2025-12-15)
+
+### Feat
+
+- **tests**: add integration tests for PostgreSQL support
+
 ## 0.5.0 (2025-12-12)
 
 ### Feat
